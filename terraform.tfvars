@@ -10,7 +10,7 @@ name = "nomad"
 
 # `key_name` (required) -  The name of the AWS SSH
 # keys to be loaded on the instance at provisioning.  
-key_name = "arusso-us-east-1"
+key_name = "YOUR_KEY"
 
 # `nomad_binary` (optional, null) - URL of a zip file 
 # containing a nomad executable with which to replace
@@ -27,7 +27,7 @@ region = "us-east-1"
 # for this environment to build properly.
 
 # Image built with ../../packer.json
-ami = "ami-02cee18d6d1a1ccf3"
+ami = "YOUR_PACKER_IMAGE_ID"
 
 # These options control instance size and count. 
 # They should be set according to your needs.
@@ -43,5 +43,5 @@ whitelist_ip = "0.0.0.0/0"
 # Token Accessor and Secret IDs used to create the
 # Nomad server and client token for Consul auto-join.
 # Must be a UUID
-nomad_consul_token_id = "cede7a5e-dc73-4d41-acc5-58df3d5d0f22"
-nomad_consul_token_secret = "8f94ee77-bc50-4ba1-bf75-132ed6b9366e"
+nomad_consul_token_id = ""
+nomad_consul_token_secret = ""
