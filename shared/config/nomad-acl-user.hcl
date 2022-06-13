@@ -8,5 +8,5 @@ node {
 
 namespace "*" { 
     policy = "read" 
-    capabilities = ["submit-job", "read-logs"] 
+    capabilities = ["submit-job", "read-logs", "read-fs"]
 }

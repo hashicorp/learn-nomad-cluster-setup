@@ -49,12 +49,12 @@ build {
 
   provisioner "file" {
     destination = "/ops"
-    source      = "../shared"
+    source      = "shared"
   }
 
   provisioner "shell" {
     environment_vars = ["INSTALL_NVIDIA_DOCKER=false"]
-    script           = "../shared/scripts/setup.sh"
+    script           = "shared/scripts/setup.sh"
   }
 
 }
