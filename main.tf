@@ -130,7 +130,7 @@ resource "aws_security_group" "client_sg" {
 }
 
 data "template_file" "user_data_server" {
-  template = file("${path.root}/data-scripts/user-data-server.sh")
+  template = file("${path.module}/data-scripts/user-data-server.sh")
 
   vars = {
     server_count = var.server_count
@@ -148,7 +148,7 @@ data "template_file" "user_data_server" {
 }
 
 data "template_file" "user_data_client" {
-  template = file("${path.root}/data-scripts/user-data-client.sh")
+  template = file("${path.module}/data-scripts/user-data-client.sh")
 
   vars = {
     region = var.region
