@@ -1,5 +1,6 @@
 variable "name" {
   description = "Used to name various infrastructure components"
+  default = "nomad"
 }
 
 variable "whitelist_ip" {
@@ -12,6 +13,7 @@ variable "region" {
 }
 
 variable "ami" {
+  description = "The AMI to use for the server and client machines."
 }
 
 variable "server_instance_type" {
