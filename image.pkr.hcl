@@ -1,3 +1,11 @@
+locals { 
+  timestamp = regex_replace(timestamp(), "[- TZ:]", "")
+}
+
+variable "aws_region" {
+  type = string
+  default = "us-east-1"
+}
 
 data "amazon-ami" "hashistack" {
   filters = {
@@ -9,15 +17,14 @@ data "amazon-ami" "hashistack" {
   }
   most_recent = true
   owners      = ["099720109477"]
-  region      = "us-east-1"
+  region      = var.aws_region
 }
 
-locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
 source "amazon-ebs" "hashistack" {
   ami_name      = "hashistack ${local.timestamp}"
   instance_type = "t2.medium"
-  region        = "us-east-1"
+  region        = var.aws_region
   source_ami    = "${data.amazon-ami.hashistack.id}"
   ssh_username  = "ubuntu"
   force_deregister = true

@@ -33,6 +33,7 @@ CONSULTEMPLATEDIR=/opt/consul-template
 sudo apt-get install -y software-properties-common
 sudo apt-get update
 sudo apt-get install -y unzip tree redis-tools jq curl tmux
+sudo apt-get clean
 
 
 # Disable the firewall
