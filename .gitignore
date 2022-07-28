@@ -7,6 +7,7 @@ gcp/
 *.tfstate
 *.tfstate.backup
 .terraform.lock.hcl
+terraform.tfvars
 Vagrantfile
 ignore*
 nomad.token
