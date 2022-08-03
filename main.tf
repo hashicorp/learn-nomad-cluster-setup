@@ -40,7 +40,7 @@ resource "aws_security_group" "server_lb" {
 }
 
 resource "aws_security_group" "primary" {
-  name   = var.name
+  name   = "${var.name}-security-group"
   vpc_id = data.aws_vpc.default.id
 
   ingress {
@@ -84,7 +84,7 @@ resource "aws_security_group" "primary" {
 }
 
 resource "aws_security_group" "clients_ingress_sg" {
-  name   = "nomad-clients-ingress"
+  name   = "${var.name}-clients-ingress"
   vpc_id = data.aws_vpc.default.id
 
   # Nginx external
@@ -111,7 +111,7 @@ resource "aws_security_group" "clients_ingress_sg" {
 }
 
 resource "aws_security_group" "client_sg" {
-  name   = "nomad-clients"
+  name   = "${var.name}-clients-security-group"
   vpc_id = data.aws_vpc.default.id
 
   ingress {
@@ -261,7 +261,7 @@ data "aws_iam_policy_document" "instance_role" {
 }
 
 resource "aws_iam_role_policy" "auto_discover_cluster" {
-  name   = "auto-discover-cluster"
+  name   = "${var.name}-auto-discover-cluster"
   role   = aws_iam_role.instance_role.id
   policy = data.aws_iam_policy_document.auto_discover_cluster.json
 }
