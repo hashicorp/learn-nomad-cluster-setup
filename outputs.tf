@@ -6,6 +6,10 @@ output "consul_bootstrap_token_secret" {
   value = var.nomad_consul_token_secret
 }
 
+output "nomad_client_network_ids" {
+  value = aws_instance.client[*].primary_network_interface_id
+}
+
 output "nomad_vpc_id" {
   value = data.aws_vpc.default.id
 }
