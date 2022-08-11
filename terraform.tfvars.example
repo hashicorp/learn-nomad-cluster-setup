@@ -36,9 +36,9 @@ server_count                    = "3"
 client_instance_type            = "t2.micro"
 client_count                    = "3"
 
-# `whitelist_ip` (required) - IP to whitelist for the
+# `allowlist_ip` (required) - IP to allow access for the
 # security groups (set to 0.0.0.0/0 for world).  
-whitelist_ip = "0.0.0.0/0"
+allowlist_ip = "0.0.0.0/0"
 
 # Token Accessor and Secret IDs used to create the
 # Nomad server and client token for Consul auto-join.
