@@ -20,7 +20,7 @@ resource "aws_security_group" "server_lb" {
     from_port   = 4646
     to_port     = 4646
     protocol    = "tcp"
-    cidr_blocks = [var.whitelist_ip]
+    cidr_blocks = [var.allowlist_ip]
   }
 
   # Consul
@@ -28,7 +28,7 @@ resource "aws_security_group" "server_lb" {
     from_port   = 8500
     to_port     = 8500
     protocol    = "tcp"
-    cidr_blocks = [var.whitelist_ip]
+    cidr_blocks = [var.allowlist_ip]
   }
 
   egress {
@@ -47,7 +47,7 @@ resource "aws_security_group" "primary" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.whitelist_ip]
+    cidr_blocks = [var.allowlist_ip]
   }
 
   # Nomad
@@ -55,7 +55,7 @@ resource "aws_security_group" "primary" {
     from_port       = 4646
     to_port         = 4646
     protocol        = "tcp"
-    cidr_blocks     = [var.whitelist_ip]
+    cidr_blocks     = [var.allowlist_ip]
     security_groups = [aws_security_group.server_lb.id]
   }
 
@@ -64,7 +64,7 @@ resource "aws_security_group" "primary" {
     from_port       = 8500
     to_port         = 8500
     protocol        = "tcp"
-    cidr_blocks     = [var.whitelist_ip]
+    cidr_blocks     = [var.allowlist_ip]
     security_groups = [aws_security_group.server_lb.id]
   }
 

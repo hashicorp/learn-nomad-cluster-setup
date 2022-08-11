@@ -3,8 +3,8 @@ variable "name" {
   default = "nomad"
 }
 
-variable "whitelist_ip" {
-  description = "IP to whitelist for the security groups (set 0.0.0.0/0 for world)"
+variable "allowlist_ip" {
+  description = "IP to allow access for the security groups (set 0.0.0.0/0 for world)"
 }
 
 variable "region" {
