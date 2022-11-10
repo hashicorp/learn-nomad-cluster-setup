@@ -129,40 +129,6 @@ resource "aws_security_group" "client_sg" {
   }
 }
 
-data "template_file" "user_data_server" {
-  template = file("${path.module}/data-scripts/user-data-server.sh")
-
-  vars = {
-    server_count = var.server_count
-    region       = var.region
-    retry_join = chomp(
-      join(
-        " ",
-        formatlist("%s=%s", keys(var.retry_join), values(var.retry_join)),
-      ),
-    )
-    nomad_binary = var.nomad_binary
-    nomad_consul_token_id = var.nomad_consul_token_id
-    nomad_consul_token_secret = var.nomad_consul_token_secret
-  }
-}
-
-data "template_file" "user_data_client" {
-  template = file("${path.module}/data-scripts/user-data-client.sh")
-
-  vars = {
-    region = var.region
-    retry_join = chomp(
-      join(
-        " ",
-        formatlist("%s=%s ", keys(var.retry_join), values(var.retry_join)),
-      ),
-    )
-    nomad_binary = var.nomad_binary
-    nomad_consul_token_secret = var.nomad_consul_token_secret
-  }
-}
-
 resource "aws_instance" "server" {
   ami                    = var.ami
   instance_type          = var.server_instance_type
@@ -189,7 +155,19 @@ resource "aws_instance" "server" {
     delete_on_termination = "true"
   }
 
-  user_data            = data.template_file.user_data_server.rendered
+  user_data = templatefile("${path.module}/data-scripts/user-data-server.sh", {
+    server_count = var.server_count
+    region       = var.region
+    retry_join = chomp(
+      join(
+        " ",
+        formatlist("%s=%s", keys(var.retry_join), values(var.retry_join)),
+      ),
+    )
+    nomad_binary              = var.nomad_binary
+    nomad_consul_token_id     = var.nomad_consul_token_id
+    nomad_consul_token_secret = var.nomad_consul_token_secret
+  })
   iam_instance_profile = aws_iam_instance_profile.instance_profile.name
 
   metadata_options {
@@ -229,7 +207,17 @@ resource "aws_instance" "client" {
     delete_on_termination = "true"
   }
 
-  user_data            = data.template_file.user_data_client.rendered
+  user_data = templatefile("${path.module}/data-scripts/user-data-client.sh", {
+    region = var.region
+    retry_join = chomp(
+      join(
+        " ",
+        formatlist("%s=%s ", keys(var.retry_join), values(var.retry_join)),
+      ),
+    )
+    nomad_binary              = var.nomad_binary
+    nomad_consul_token_secret = var.nomad_consul_token_secret
+  })
   iam_instance_profile = aws_iam_instance_profile.instance_profile.name
 
   metadata_options {
