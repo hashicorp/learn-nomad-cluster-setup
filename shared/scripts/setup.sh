@@ -30,7 +30,24 @@ CONSULTEMPLATECONFIGDIR=/etc/consul-template.d
 CONSULTEMPLATEDIR=/opt/consul-template
 
 # Dependencies
-sudo apt-get install -y software-properties-common
+case $CLOUD_ENV in
+  aws)
+    sudo apt-get install -y software-properties-common
+    ;;
+
+  gce)
+    sudo apt-get update && sudo apt-get install -y software-properties-common
+    ;;
+
+  azure)
+    sudo apt-get install -y software-properties-common
+    ;;
+
+  *)
+    exit "CLOUD_ENV not set to one of aws, gce, or azure - exiting."
+    ;;
+esac
+
 sudo apt-get update
 sudo apt-get install -y unzip tree redis-tools jq curl tmux
 sudo apt-get clean

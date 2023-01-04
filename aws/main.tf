@@ -6,49 +6,9 @@ data "aws_vpc" "default" {
   default = true
 }
 
-// resource "aws_route" "open_route" {
-//   route_table_id = data.aws_vpc.default.default_vpc_default_route_table_id
-//   destination_cidr_block = "0.0.0.0/0"
-// }
-
-resource "aws_security_group" "server_lb" {
-  name   = "${var.name}-server-lb"
+resource "aws_security_group" "consul_nomad_ui_ingress" {
+  name   = "${var.name}-ui-ingress"
   vpc_id = data.aws_vpc.default.id
-
-  # Nomad
-  ingress {
-    from_port   = 4646
-    to_port     = 4646
-    protocol    = "tcp"
-    cidr_blocks = [var.allowlist_ip]
-  }
-
-  # Consul
-  ingress {
-    from_port   = 8500
-    to_port     = 8500
-    protocol    = "tcp"
-    cidr_blocks = [var.allowlist_ip]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_security_group" "primary" {
-  name   = "${var.name}-security-group"
-  vpc_id = data.aws_vpc.default.id
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.allowlist_ip]
-  }
 
   # Nomad
   ingress {
@@ -56,7 +16,6 @@ resource "aws_security_group" "primary" {
     to_port         = 4646
     protocol        = "tcp"
     cidr_blocks     = [var.allowlist_ip]
-    security_groups = [aws_security_group.server_lb.id]
   }
 
   # Consul
@@ -65,7 +24,6 @@ resource "aws_security_group" "primary" {
     to_port         = 8500
     protocol        = "tcp"
     cidr_blocks     = [var.allowlist_ip]
-    security_groups = [aws_security_group.server_lb.id]
   }
 
   ingress {
@@ -83,18 +41,56 @@ resource "aws_security_group" "primary" {
   }
 }
 
-resource "aws_security_group" "clients_ingress_sg" {
+resource "aws_security_group" "ssh_ingress" {
+  name   = "${var.name}-ssh-ingress"
+  vpc_id = data.aws_vpc.default.id
+
+  # SSH
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.allowlist_ip]
+  }
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "allow_all_internal" {
+  name   = "${var.name}-allow-all-internal"
+  vpc_id = data.aws_vpc.default.id
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "clients_ingress" {
   name   = "${var.name}-clients-ingress"
   vpc_id = data.aws_vpc.default.id
 
-  # Nginx external
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    cidr_blocks     = ["0.0.0.0/0"]
-  }
-
   ingress {
     from_port = 0
     to_port   = 0
@@ -108,41 +104,34 @@ resource "aws_security_group" "clients_ingress_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
 
-resource "aws_security_group" "client_sg" {
-  name   = "${var.name}-clients-security-group"
-  vpc_id = data.aws_vpc.default.id
+  # Add application ingress rules here
+  # These rules are applied only to the client nodes
 
-  ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-    self      = true
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # nginx example
+  # ingress {
+  #   from_port   = 80
+  #   to_port     = 80
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
 }
 
 resource "aws_instance" "server" {
   ami                    = var.ami
   instance_type          = var.server_instance_type
   key_name               = var.key_name
-  vpc_security_group_ids = [aws_security_group.primary.id]
+  vpc_security_group_ids = [aws_security_group.consul_nomad_ui_ingress.id, aws_security_group.ssh_ingress.id, aws_security_group.allow_all_internal.id]
   count                  = var.server_count
 
   # instance tags
+  # ConsulAutoJoin is necessary for nodes to automatically join the cluster
   tags = merge(
     {
       "Name" = "${var.name}-server-${count.index}"
     },
     {
-      "${var.retry_join.tag_key}" = "${var.retry_join.tag_value}"
+      "ConsulAutoJoin" = "auto-join"
     },
     {
       "NomadType" = "server"
@@ -155,15 +144,11 @@ resource "aws_instance" "server" {
     delete_on_termination = "true"
   }
 
-  user_data = templatefile("${path.module}/data-scripts/user-data-server.sh", {
-    server_count = var.server_count
-    region       = var.region
-    retry_join = chomp(
-      join(
-        " ",
-        formatlist("%s=%s", keys(var.retry_join), values(var.retry_join)),
-      ),
-    )
+  user_data = templatefile("../shared/data-scripts/user-data-server.sh", {
+    server_count              = var.server_count
+    region                    = var.region
+    cloud_env                 = "aws"
+    retry_join                = var.retry_join
     nomad_binary              = var.nomad_binary
     nomad_consul_token_id     = var.nomad_consul_token_id
     nomad_consul_token_secret = var.nomad_consul_token_secret
@@ -171,7 +156,7 @@ resource "aws_instance" "server" {
   iam_instance_profile = aws_iam_instance_profile.instance_profile.name
 
   metadata_options {
-    http_endpoint = "enabled"
+    http_endpoint          = "enabled"
     instance_metadata_tags = "enabled"
   }
 }
@@ -180,18 +165,22 @@ resource "aws_instance" "client" {
   ami                    = var.ami
   instance_type          = var.client_instance_type
   key_name               = var.key_name
-  vpc_security_group_ids = [aws_security_group.primary.id, aws_security_group.client_sg.id]
+  vpc_security_group_ids = [aws_security_group.consul_nomad_ui_ingress.id, aws_security_group.ssh_ingress.id, aws_security_group.clients_ingress.id, aws_security_group.allow_all_internal.id]
   count                  = var.client_count
   depends_on             = [aws_instance.server]
 
   # instance tags
+  # ConsulAutoJoin is necessary for nodes to automatically join the cluster
   tags = merge(
     {
       "Name" = "${var.name}-client-${count.index}"
     },
     {
-      "${var.retry_join.tag_key}" = "${var.retry_join.tag_value}"
+      "ConsulAutoJoin" = "auto-join"
     },
+    {
+      "NomadType" = "client"
+    }
   )
 
   root_block_device {
@@ -207,21 +196,17 @@ resource "aws_instance" "client" {
     delete_on_termination = "true"
   }
 
-  user_data = templatefile("${path.module}/data-scripts/user-data-client.sh", {
-    region = var.region
-    retry_join = chomp(
-      join(
-        " ",
-        formatlist("%s=%s ", keys(var.retry_join), values(var.retry_join)),
-      ),
-    )
+  user_data = templatefile("../shared/data-scripts/user-data-client.sh", {
+    region                    = var.region
+    cloud_env                 = "aws"
+    retry_join                = var.retry_join
     nomad_binary              = var.nomad_binary
     nomad_consul_token_secret = var.nomad_consul_token_secret
   })
   iam_instance_profile = aws_iam_instance_profile.instance_profile.name
 
   metadata_options {
-    http_endpoint = "enabled"
+    http_endpoint          = "enabled"
     instance_metadata_tags = "enabled"
   }
 }
@@ -266,24 +251,4 @@ data "aws_iam_policy_document" "auto_discover_cluster" {
 
     resources = ["*"]
   }
-}
-
-resource "aws_elb" "server_lb" {
-  name               = "${var.name}-server-lb"
-  availability_zones = distinct(aws_instance.server.*.availability_zone)
-  internal           = false
-  instances          = aws_instance.server.*.id
-  listener {
-    instance_port     = 4646
-    instance_protocol = "http"
-    lb_port           = 4646
-    lb_protocol       = "http"
-  }
-  listener {
-    instance_port     = 8500
-    instance_protocol = "http"
-    lb_port           = 8500
-    lb_protocol       = "http"
-  }
-  security_groups = [aws_security_group.server_lb.id]
 }

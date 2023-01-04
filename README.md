@@ -1,3 +1,3 @@
-# Set up a Nomad Cluster on AWS
+# Set up a Nomad cluster on the major cloud platforms
 
-This repo is a companion to the [Set up a Nomad Cluster on AWS](https://learn.hashicorp.com/tutorials/nomad/cluster-setup-aws) tutorial, containing configuration files to create a Nomad cluster on AWS with ACLs enabled.
+This repo is a companion to the [Cluster Setup](https://developer.hashicorp.com/nomad/tutorials/cluster-setup) collection of tutorials, containing configuration files to create a Nomad cluster with ACLs enabled on AWS, GCP, and Azure.

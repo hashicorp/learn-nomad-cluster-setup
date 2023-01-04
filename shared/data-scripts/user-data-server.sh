@@ -3,7 +3,7 @@
 set -e
 
 exec > >(sudo tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-sudo bash /ops/shared/scripts/server.sh "aws" "${server_count}" "${retry_join}" "${nomad_binary}"
+sudo bash /ops/shared/scripts/server.sh "${cloud_env}" "${server_count}" '${retry_join}' "${nomad_binary}"
 
 ACL_DIRECTORY="/ops/shared/config"
 CONSUL_BOOTSTRAP_TOKEN="/tmp/consul_bootstrap"
@@ -13,6 +13,10 @@ NOMAD_USER_TOKEN="/tmp/nomad_user_token"
 sed -i "s/CONSUL_TOKEN/${nomad_consul_token_secret}/g" /etc/nomad.d/nomad.hcl
 
 sudo systemctl restart nomad
+
+echo "Finished server setup"
+sleep 10
+echo "ACL bootstrap begin"
 
 # Bootstrap consul ACLs
 consul acl bootstrap | grep -i secretid | awk '{print $2}' > $CONSUL_BOOTSTRAP_TOKEN
@@ -25,7 +29,7 @@ if [ $? -eq 0 ]; then
     consul acl token create -accessor=${nomad_consul_token_id} -secret=${nomad_consul_token_secret} -description "Nomad server/client auto-join token" -role-name nomad-auto-join -token-file=$CONSUL_BOOTSTRAP_TOKEN
 
     # Wait for nomad servers to come up
-    sleep 30
+    sleep 40
 
     # Bootstrap nomad ACLs
     nomad acl bootstrap | grep -i secret | awk -F '=' '{print $2}' | xargs > $NOMAD_BOOTSTRAP_TOKEN
@@ -37,3 +41,5 @@ if [ $? -eq 0 ]; then
     # Write user token to kv
     consul kv put -token-file=$CONSUL_BOOTSTRAP_TOKEN nomad_user_token $(cat $NOMAD_USER_TOKEN)
 fi
+
+echo "ACL bootstrap end"

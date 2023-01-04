@@ -20,12 +20,23 @@ RETRY_JOIN=$3
 NOMAD_BINARY=$4
 
 # Get IP from metadata service
-if [ "$CLOUD" = "gce" ]; then
-  IP_ADDRESS=$(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/ip)
-else
-  IP_ADDRESS=$(curl http://instance-data/latest/meta-data/local-ipv4)
-fi
-# IP_ADDRESS="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+case $CLOUD in
+  aws)
+    echo "CLOUD_ENV: aws"
+    IP_ADDRESS=$(curl http://instance-data/latest/meta-data/local-ipv4)
+    ;;
+  gce)
+    echo "CLOUD_ENV: gce"
+    IP_ADDRESS=$(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/ip)
+    ;;
+  azure)
+    echo "CLOUD_ENV: azure"
+    IP_ADDRESS=$(curl -s -H Metadata:true --noproxy "*" http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0?api-version=2021-12-13 | jq -r '.["privateIpAddress"]')
+    ;;
+  *)
+    echo "CLOUD_ENV: not set"
+    ;;
+esac
 
 # Consul
 sed -i "s/IP_ADDRESS/$IP_ADDRESS/g" $CONFIGDIR/consul.hcl

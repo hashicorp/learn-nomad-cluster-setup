@@ -2,9 +2,8 @@ locals {
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
 }
 
-variable "aws_region" {
+variable "region" {
   type = string
-  default = "us-east-1"
 }
 
 data "amazon-ami" "hashistack" {
@@ -17,14 +16,14 @@ data "amazon-ami" "hashistack" {
   }
   most_recent = true
   owners      = ["099720109477"]
-  region      = var.aws_region
+  region      = var.region
 }
 
 
 source "amazon-ebs" "hashistack" {
-  ami_name      = "hashistack ${local.timestamp}"
+  ami_name      = "hashistack-${local.timestamp}"
   instance_type = "t2.medium"
-  region        = var.aws_region
+  region        = var.region
   source_ami    = "${data.amazon-ami.hashistack.id}"
   ssh_username  = "ubuntu"
   force_deregister = true
@@ -51,17 +50,17 @@ build {
   sources = ["source.amazon-ebs.hashistack"]
 
   provisioner "shell" {
-    inline = ["sudo mkdir /ops", "sudo chmod 777 /ops"]
+    inline = ["sudo mkdir -p /ops/shared", "sudo chmod 777 -R /ops"]
   }
 
   provisioner "file" {
     destination = "/ops"
-    source      = "shared"
+    source      = "../shared"
   }
 
   provisioner "shell" {
-    environment_vars = ["INSTALL_NVIDIA_DOCKER=false"]
-    script           = "shared/scripts/setup.sh"
+    environment_vars = ["INSTALL_NVIDIA_DOCKER=false", "CLOUD_ENV=aws"]
+    script           = "../shared/scripts/setup.sh"
   }
 
 }
