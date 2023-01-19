@@ -15,31 +15,73 @@ sed -i "s/CONSUL_TOKEN/${nomad_consul_token_secret}/g" /etc/nomad.d/nomad.hcl
 sudo systemctl restart nomad
 
 echo "Finished server setup"
-sleep 10
+
 echo "ACL bootstrap begin"
 
-# Bootstrap consul ACLs
-consul acl bootstrap | grep -i secretid | awk '{print $2}' > $CONSUL_BOOTSTRAP_TOKEN
+# Wait until leader has been elected and bootstrap consul ACLs
+while true; do
+    # capture stdout and stderr
+    set +e
+    sleep 2
+    OUTPUT=$(consul acl bootstrap 2>&1)
+    if [ $? -ne 0 ]; then
+        echo "consul acl bootstrap: $OUTPUT"
+        if [[ "$OUTPUT" = *"No cluster leader"* ]]; then
+            echo "consul no cluster leader"
+            continue
+        else
+            echo "consul already bootstrapped"
+            exit 0
+        fi
 
-if [ $? -eq 0 ]; then
-    consul acl policy create -name 'nomad-auto-join' -rules="@$ACL_DIRECTORY/consul-acl-nomad-auto-join.hcl" -token-file=$CONSUL_BOOTSTRAP_TOKEN
+    fi
+    set -e
 
-    consul acl role create -name "nomad-auto-join" -description "Role with policies necessary for nomad servers and clients to auto-join via Consul." -policy-name "nomad-auto-join" -token-file=$CONSUL_BOOTSTRAP_TOKEN
+    echo "$OUTPUT" | grep -i secretid | awk '{print $2}' > $CONSUL_BOOTSTRAP_TOKEN
+    if [ -s $CONSUL_BOOTSTRAP_TOKEN ]; then
+        echo "consul bootstrapped"
+        break
+    fi
+done
 
-    consul acl token create -accessor=${nomad_consul_token_id} -secret=${nomad_consul_token_secret} -description "Nomad server/client auto-join token" -role-name nomad-auto-join -token-file=$CONSUL_BOOTSTRAP_TOKEN
 
-    # Wait for nomad servers to come up
-    sleep 40
+consul acl policy create -name 'nomad-auto-join' -rules="@$ACL_DIRECTORY/consul-acl-nomad-auto-join.hcl" -token-file=$CONSUL_BOOTSTRAP_TOKEN
 
-    # Bootstrap nomad ACLs
-    nomad acl bootstrap | grep -i secret | awk -F '=' '{print $2}' | xargs > $NOMAD_BOOTSTRAP_TOKEN
+consul acl role create -name "nomad-auto-join" -description "Role with policies necessary for nomad servers and clients to auto-join via Consul." -policy-name "nomad-auto-join" -token-file=$CONSUL_BOOTSTRAP_TOKEN
 
-    nomad acl policy apply -token $(cat $NOMAD_BOOTSTRAP_TOKEN) -description "Policy to allow reading of agents and nodes and listing and submitting jobs in all namespaces." node-read-job-submit $ACL_DIRECTORY/nomad-acl-user.hcl
+consul acl token create -accessor=${nomad_consul_token_id} -secret=${nomad_consul_token_secret} -description "Nomad server/client auto-join token" -role-name nomad-auto-join -token-file=$CONSUL_BOOTSTRAP_TOKEN
 
-    nomad acl token create -token $(cat $NOMAD_BOOTSTRAP_TOKEN) -name "read-token" -policy node-read-job-submit | grep -i secret | awk -F "=" '{print $2}' | xargs > $NOMAD_USER_TOKEN
+# Wait for nomad servers to come up and bootstrap nomad ACL
+while true; do
+    # capture stdout and stderr
+    set +e
+    sleep 2
+    OUTPUT=$(nomad acl bootstrap 2>&1)
+    if [ $? -ne 0 ]; then
+        echo "nomad acl bootstrap: $OUTPUT"
+        if [[ "$OUTPUT" = *"No cluster leader"* ]]; then
+            echo "nomad no cluster leader"
+            continue
+        else
+            echo "nomad already bootstrapped"
+            exit 0
+        fi
+    fi
+    set -e
 
-    # Write user token to kv
-    consul kv put -token-file=$CONSUL_BOOTSTRAP_TOKEN nomad_user_token $(cat $NOMAD_USER_TOKEN)
-fi
+    echo "$OUTPUT" | grep -i secret | awk -F '=' '{print $2}' | xargs | awk 'NF' > $NOMAD_BOOTSTRAP_TOKEN
+    if [ -s $NOMAD_BOOTSTRAP_TOKEN ]; then
+        echo "nomad bootstrapped"
+        break
+    fi
+done
+
+nomad acl policy apply -token "$(cat $NOMAD_BOOTSTRAP_TOKEN)" -description "Policy to allow reading of agents and nodes and listing and submitting jobs in all namespaces." node-read-job-submit $ACL_DIRECTORY/nomad-acl-user.hcl
+
+nomad acl token create -token "$(cat $NOMAD_BOOTSTRAP_TOKEN)" -name "read-token" -policy node-read-job-submit | grep -i secret | awk -F "=" '{print $2}' | xargs > $NOMAD_USER_TOKEN
+
+# Write user token to kv
+consul kv put -token-file=$CONSUL_BOOTSTRAP_TOKEN nomad_user_token "$(cat $NOMAD_USER_TOKEN)"
 
 echo "ACL bootstrap end"
+
