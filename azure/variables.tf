@@ -35,6 +35,10 @@ variable "tenant_id" {
   description = "The Azure tenant ID to use."
 }
 
+variable "admin_password" {
+  description = "The password for the ubuntu account on the server and client machines."
+}
+
 variable "retry_join" {
   description = "Used by Consul to automatically form a cluster."
   type        = string

@@ -19,10 +19,10 @@ echo "Finished server setup"
 echo "ACL bootstrap begin"
 
 # Wait until leader has been elected and bootstrap consul ACLs
-while true; do
+for i in {1..9}; do
     # capture stdout and stderr
     set +e
-    sleep 2
+    sleep 5
     OUTPUT=$(consul acl bootstrap 2>&1)
     if [ $? -ne 0 ]; then
         echo "consul acl bootstrap: $OUTPUT"
@@ -52,10 +52,10 @@ consul acl role create -name "nomad-auto-join" -description "Role with policies 
 consul acl token create -accessor=${nomad_consul_token_id} -secret=${nomad_consul_token_secret} -description "Nomad server/client auto-join token" -role-name nomad-auto-join -token-file=$CONSUL_BOOTSTRAP_TOKEN
 
 # Wait for nomad servers to come up and bootstrap nomad ACL
-while true; do
+for i in {1..12}; do
     # capture stdout and stderr
     set +e
-    sleep 2
+    sleep 5
     OUTPUT=$(nomad acl bootstrap 2>&1)
     if [ $? -ne 0 ]; then
         echo "nomad acl bootstrap: $OUTPUT"
