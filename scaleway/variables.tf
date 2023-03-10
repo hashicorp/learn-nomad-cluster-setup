@@ -24,7 +24,7 @@ variable "instance_image" {
 
 variable "server_instance_type" {
   description = "The Scaleway instance type to use for servers."
-  default     = "PLAY2-PICO"
+  default     = "PLAY2-NANO"
 }
 
 variable "server_count" {
@@ -39,7 +39,7 @@ variable "server_root_block_device_size" {
 
 variable "client_instance_type" {
   description = "The Scaleway instance type to use for clients."
-  default     = "PLAY2-PICO"
+  default     = "PLAY2-NANO"
 }
 
 variable "client_count" {

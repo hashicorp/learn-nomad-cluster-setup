@@ -22,8 +22,8 @@ instance_image                = "hashistack-20230310141424"
 # change them
 # allowlist_ip                  = "0.0.0.0/0"
 # name                          = "nomad"
-# server_instance_type          = "PLAY2-PICO"
+# server_instance_type          = "PLAY2-NANO"
 # server_count                  = "3"
 # server_root_block_device_size = 20
-# client_instance_type          = "PLAY2-PICO"
+# client_instance_type          = "PLAY2-NANO"
 # client_count                  = "3"
