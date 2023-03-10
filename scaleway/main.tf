@@ -204,7 +204,7 @@ resource "scaleway_instance_server" "client" {
   }
 
   user_data = {
-    "cloud-init" = data.cloudinit_config.server.rendered
+    "cloud-init" = data.cloudinit_config.client.rendered
   }
 }
 
