@@ -17,8 +17,8 @@ resource "scaleway_vpc_private_network" "main" {
   name = "${var.name}-vpc"
 }
 
-resource "scaleway_instance_security_group" "consul_nomad_ui_ingress" {
-  name = "${var.name}-ui-ingress"
+resource "scaleway_instance_security_group" "servers_ingress" {
+  name = "${var.name}-servers-ingress"
   tags = ["nomad"]
 
   inbound_default_policy = "drop"
@@ -36,13 +36,6 @@ resource "scaleway_instance_security_group" "consul_nomad_ui_ingress" {
     protocol = "TCP"
     ip_range = var.allowlist_ip
   }
-}
-
-resource "scaleway_instance_security_group" "ssh_ingress" {
-  name = "${var.name}-ssh-ingress"
-  tags = ["nomad"]
-
-  inbound_default_policy = "drop"
 
   inbound_rule {
     action   = "accept"
@@ -57,6 +50,17 @@ resource "scaleway_instance_security_group" "clients_ingress" {
   tags = ["nomad"]
 
   inbound_default_policy = "drop"
+
+  // copy the inbound rules from the servers_ingress security group
+  dynamic "inbound_rule" {
+    for_each = scaleway_instance_security_group.servers_ingress.inbound_rule
+    content {
+      action   = inbound_rule.value.action
+      port     = inbound_rule.value.port
+      protocol = inbound_rule.value.protocol
+      ip_range = inbound_rule.value.ip_range
+    }
+  }
 
   # Add application ingress rules here
   # These rules are applied only to the client nodes
@@ -103,6 +107,7 @@ data "scaleway_instance_image" "server" {
   name = var.instance_image
 }
 
+
 data "cloudinit_config" "server" {
   gzip          = false
   base64_encode = false
@@ -139,6 +144,8 @@ resource "scaleway_instance_server" "server" {
 
   ip_id = scaleway_instance_ip.server[count.index].id
 
+  security_group_id = scaleway_instance_security_group.servers_ingress.id
+
   root_volume {
     volume_type           = "b_ssd"
     size_in_gb            = var.server_root_block_device_size
@@ -156,7 +163,6 @@ resource "scaleway_instance_private_nic" "server" {
   server_id          = scaleway_instance_server.server[count.index].id
   private_network_id = scaleway_vpc_private_network.main.id
 }
-
 
 
 data "cloudinit_config" "client" {
@@ -196,6 +202,8 @@ resource "scaleway_instance_server" "client" {
   image = data.scaleway_instance_image.server.id
 
   ip_id = scaleway_instance_ip.client[count.index].id
+
+  security_group_id = scaleway_instance_security_group.clients_ingress.id
 
   root_volume {
     volume_type           = "b_ssd"
