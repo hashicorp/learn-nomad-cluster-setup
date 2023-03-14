@@ -13,66 +13,6 @@ provider "scaleway" {
   project_id = var.project_id
 }
 
-resource "scaleway_vpc_private_network" "main" {
-  name = "${var.name}-vpc"
-}
-
-resource "scaleway_instance_security_group" "servers_ingress" {
-  name = "${var.name}-servers-ingress"
-  tags = ["nomad"]
-
-  inbound_default_policy = "drop"
-
-  inbound_rule {
-    action   = "accept"
-    port     = 4646
-    protocol = "TCP"
-    ip_range = var.allowlist_ip
-  }
-
-  inbound_rule {
-    action   = "accept"
-    port     = 8500
-    protocol = "TCP"
-    ip_range = var.allowlist_ip
-  }
-
-  inbound_rule {
-    action   = "accept"
-    port     = 22
-    protocol = "TCP"
-    ip_range = var.allowlist_ip
-  }
-}
-
-resource "scaleway_instance_security_group" "clients_ingress" {
-  name = "${var.name}-clients-ingress"
-  tags = ["nomad"]
-
-  inbound_default_policy = "drop"
-
-  // copy the inbound rules from the servers_ingress security group
-  dynamic "inbound_rule" {
-    for_each = scaleway_instance_security_group.servers_ingress.inbound_rule
-    content {
-      action   = inbound_rule.value.action
-      port     = inbound_rule.value.port
-      protocol = inbound_rule.value.protocol
-      ip_range = inbound_rule.value.ip_range
-    }
-  }
-
-  # Add application ingress rules here
-  # These rules are applied only to the client nodes
-
-  inbound_rule {
-    action   = "accept"
-    port     = 80
-    protocol = "TCP"
-    ip_range = var.allowlist_ip
-  }
-}
-
 resource "scaleway_iam_application" "auto_discovery" {
   name        = "${var.name}-application-auto-discovery"
   description = "Nomad application"
@@ -103,6 +43,9 @@ locals {
   retry_join_full = "${var.retry_join} token=${scaleway_iam_api_key.auto_discovery.secret_key}"
 }
 
+/**
+ * Nomad Servers
+ */
 data "scaleway_instance_image" "server" {
   name = var.instance_image
 }
@@ -157,11 +100,12 @@ resource "scaleway_instance_server" "server" {
   }
 }
 
-resource "scaleway_instance_private_nic" "server" {
-  count = var.server_count
+resource "scaleway_instance_security_group" "servers_ingress" {
+  name = "${var.name}-servers-ingress"
+  tags = ["nomad"]
 
-  server_id          = scaleway_instance_server.server[count.index].id
-  private_network_id = scaleway_vpc_private_network.main.id
+  inbound_default_policy = "drop"
+  external_rules         = true
 }
 
 
@@ -188,6 +132,9 @@ resource "scaleway_instance_ip" "client" {
   tags  = ["nomad", "consul-auto-join", "nomad-client"]
 }
 
+/**
+ * Nomad Clients
+ */
 resource "scaleway_instance_server" "client" {
   depends_on = [
     scaleway_instance_server.server
@@ -216,13 +163,106 @@ resource "scaleway_instance_server" "client" {
   }
 }
 
-resource "scaleway_instance_private_nic" "client" {
-  depends_on = [
-    scaleway_instance_server.server
-  ]
+resource "scaleway_instance_security_group" "clients_ingress" {
+  name = "${var.name}-clients-ingress"
+  tags = ["nomad"]
 
-  count = var.client_count
+  inbound_default_policy = "drop"
+  external_rules         = true
+}
 
-  server_id          = scaleway_instance_server.client[count.index].id
-  private_network_id = scaleway_vpc_private_network.main.id
+resource "scaleway_instance_security_group_rules" "servers_ingress" {
+  security_group_id = scaleway_instance_security_group.servers_ingress.id
+
+  inbound_rule {
+    action   = "accept"
+    port     = 4646
+    protocol = "TCP"
+    ip_range = var.allowlist_ip
+  }
+
+  inbound_rule {
+    action   = "accept"
+    port     = 8500
+    protocol = "TCP"
+    ip_range = var.allowlist_ip
+  }
+
+  inbound_rule {
+    action   = "accept"
+    port     = 22
+    protocol = "TCP"
+    ip_range = var.allowlist_ip
+  }
+
+  inbound_rule {
+    action   = "accept"
+    protocol = "ICMP"
+    ip_range = var.allowlist_ip
+  }
+
+  dynamic "inbound_rule" {
+    for_each = toset(scaleway_instance_server.server)
+
+    content {
+      action   = "accept"
+      protocol = "TCP"
+      ip_range = "${inbound_rule.value.public_ip}/32"
+    }
+  }
+
+  dynamic "inbound_rule" {
+    for_each = toset(scaleway_instance_server.server)
+
+    content {
+      action   = "accept"
+      protocol = "TCP"
+      ip_range = "${inbound_rule.value.private_ip}/32"
+    }
+  }
+
+  dynamic "inbound_rule" {
+    for_each = toset(scaleway_instance_server.client)
+
+    content {
+      action   = "accept"
+      protocol = "TCP"
+      ip_range = "${inbound_rule.value.public_ip}/32"
+    }
+  }
+
+  dynamic "inbound_rule" {
+    for_each = toset(scaleway_instance_server.client)
+
+    content {
+      action   = "accept"
+      protocol = "TCP"
+      ip_range = "${inbound_rule.value.private_ip}/32"
+    }
+  }
+}
+
+resource "scaleway_instance_security_group_rules" "clients_ingress" {
+  security_group_id = scaleway_instance_security_group.clients_ingress.id
+
+  // copy the inbound rules from the servers_ingress security group
+  dynamic "inbound_rule" {
+    for_each = scaleway_instance_security_group_rules.servers_ingress.inbound_rule
+    content {
+      action   = inbound_rule.value.action
+      port     = inbound_rule.value.port == null ? 0 : inbound_rule.value.port
+      protocol = inbound_rule.value.protocol
+      ip_range = inbound_rule.value.ip_range
+    }
+  }
+
+  # Add application ingress rules here
+  # These rules are applied only to the client nodes
+
+  inbound_rule {
+    action   = "accept"
+    port     = 80
+    protocol = "TCP"
+    ip_range = var.allowlist_ip
+  }
 }
