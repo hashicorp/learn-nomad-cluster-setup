@@ -1,4 +1,4 @@
-locals { 
+locals {
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
 }
 
@@ -21,27 +21,27 @@ data "amazon-ami" "hashistack" {
 
 
 source "amazon-ebs" "hashistack" {
-  ami_name      = "hashistack-${local.timestamp}"
-  instance_type = "t2.medium"
-  region        = var.region
-  source_ami    = "${data.amazon-ami.hashistack.id}"
-  ssh_username  = "ubuntu"
-  force_deregister = true
+  ami_name              = "hashistack-${local.timestamp}"
+  instance_type         = "t2.medium"
+  region                = var.region
+  source_ami            = "${data.amazon-ami.hashistack.id}"
+  ssh_username          = "ubuntu"
+  force_deregister      = true
   force_delete_snapshot = true
-  
+
   tags = {
-    Name        = "nomad-alb"
-    source = "hashicorp/learn"
-    purpose = "demo"
-    OS_Version = "Ubuntu"
-    Release = "Latest"
-    Base_AMI_ID = "{{ .SourceAMI }}"
+    Name          = "nomad-alb"
+    source        = "hashicorp/learn"
+    purpose       = "demo"
+    OS_Version    = "Ubuntu"
+    Release       = "Latest"
+    Base_AMI_ID   = "{{ .SourceAMI }}"
     Base_AMI_Name = "{{ .SourceAMIName }}"
   }
-  
+
   snapshot_tags = {
-    Name        = "nomad-alb"
-    source = "hashicorp/learn"
+    Name    = "nomad-alb"
+    source  = "hashicorp/learn"
     purpose = "demo"
   }
 }

@@ -1,24 +1,26 @@
-data_dir = "/opt/consul/data"
-bind_addr = "0.0.0.0"
-client_addr = "0.0.0.0"
+data_dir       = "/opt/consul/data"
+bind_addr      = "0.0.0.0"
+client_addr    = "0.0.0.0"
 advertise_addr = "IP_ADDRESS"
 
 bootstrap_expect = SERVER_COUNT
 
 acl {
-    enabled = true
-    default_policy = "deny"
-    down_policy = "extend-cache"
+  enabled        = true
+  default_policy = "deny"
+  down_policy    = "extend-cache"
 }
 
-log_level = "INFO"
+log_level = "DEBUG"
 
 server = true
-ui = true
+ui_config {
+  enabled = true
+}
 retry_join = ["RETRY_JOIN"]
 
 service {
-    name = "consul"
+  name = "consul"
 }
 
 connect {

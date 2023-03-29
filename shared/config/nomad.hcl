@@ -9,7 +9,7 @@ server {
 
 consul {
   address = "127.0.0.1:8500"
-  token = "CONSUL_TOKEN"
+  token   = "CONSUL_TOKEN"
 }
 
 acl {
@@ -23,3 +23,5 @@ vault {
   create_from_role = "nomad-cluster"
   token            = ""
 }
+
+log_level = "DEBUG"
