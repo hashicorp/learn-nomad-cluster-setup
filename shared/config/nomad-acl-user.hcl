@@ -1,12 +1,34 @@
-agent { 
-    policy = "read"
-} 
+agent {
+    policy = "write"
+}
 
-node { 
-    policy = "read" 
-} 
+quota {
+  policy = "write"
+}
 
-namespace "*" { 
-    policy = "read" 
-    capabilities = ["submit-job", "read-logs", "read-fs"]
+host_volume "*" {
+  policy = "write"
+}
+
+node_pool "*" {
+  policy       = "write"
+  #capabilities = ["write"]
+}
+
+plugin {
+  policy = "write"
+}
+
+node {
+    policy = "write"
+}
+
+operator {
+  policy = "write"
+}
+
+
+namespace "*" {
+    policy = "write"
+    #capabilities = ["submit-job", "read-logs", "read-fs"]
 }
