@@ -177,7 +177,7 @@ resource "azurerm_linux_virtual_machine" "server" {
   computer_name  = "hashistack-server-${count.index}"
   admin_username = "ubuntu"
   admin_password = var.admin_password
-  custom_data    = "${base64encode(templatefile("../shared/data-scripts/user-data-server.sh", {
+  custom_data    = "${base64encode(templatefile("${path.module}/../shared/data-scripts/user-data-server.sh", {
       region                    = var.location
       cloud_env                 = "azure"
       server_count              = "${var.server_count}"
@@ -238,7 +238,7 @@ resource "azurerm_linux_virtual_machine" "client" {
   computer_name  = "hashistack-client-${count.index}"
   admin_username = "ubuntu"
   admin_password = var.admin_password
-  custom_data    = "${base64encode(templatefile("../shared/data-scripts/user-data-client.sh", {
+  custom_data    = "${base64encode(templatefile("${path.module}/../shared/data-scripts/user-data-client.sh", {
       region                    = var.location
       cloud_env                 = "azure"
       retry_join                = var.retry_join

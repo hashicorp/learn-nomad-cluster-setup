@@ -105,7 +105,7 @@ resource "google_compute_instance" "server" {
     ]
   }
 
-  metadata_startup_script = templatefile("../shared/data-scripts/user-data-server.sh", {
+  metadata_startup_script = templatefile("${path.module}/../shared/data-scripts/user-data-server.sh", {
     server_count              = var.server_count
     region                    = var.region
     cloud_env                 = "gce"
@@ -147,7 +147,7 @@ resource "google_compute_instance" "client" {
     ]
   }
 
-  metadata_startup_script = templatefile("../shared/data-scripts/user-data-client.sh", {
+  metadata_startup_script = templatefile("${path.module}/../shared/data-scripts/user-data-client.sh", {
     region                    = var.region
     cloud_env                 = "gce"
     retry_join                = var.retry_join
