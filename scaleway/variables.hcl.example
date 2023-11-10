@@ -1,0 +1,29 @@
+# Packer variables (all are required)
+zone                          = "fr-par-1"
+
+# Terraform variables (all are required)
+nomad_consul_token_id         = "123e4567-e89b-12d3-a456-426614174000"
+nomad_consul_token_secret     = "123e4567-e89b-12d3-a456-426614174000"
+instance_image                = "hashistack-20230310141424"
+
+# The project ID will default to the value of the
+# SCW_DEFAULT_PROJECT_ID environment variable or the
+# default project ID configured with the Scaleway CLI
+# project_id                    = "123e4567-e89b-12d3-a456-426614174000"
+
+# The retry join allows Consul to automatically
+# discover other nodes in the cluster. An IAM key will
+# be created in Terraform and appended to the retry_join
+# variable
+# retry_join                    = "provider=scaleway tag_name=consul-auto-join"
+
+# These variables will default to the values shown
+# and do not need to be updated unless you want to
+# change them
+# allowlist_ip                  = "0.0.0.0/0"
+# name                          = "nomad"
+# server_instance_type          = "PLAY2-NANO"
+# server_count                  = "3"
+# server_root_block_device_size = 20
+# client_instance_type          = "PLAY2-NANO"
+# client_count                  = "3"
