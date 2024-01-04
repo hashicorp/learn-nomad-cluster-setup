@@ -48,7 +48,7 @@ case $CLOUD_ENV in
     ;;
 esac
 
-sudo apt-get update
+sudo add-apt-repository universe && sudo apt-get update
 sudo apt-get install -y unzip tree redis-tools jq curl tmux
 sudo apt-get clean
 
