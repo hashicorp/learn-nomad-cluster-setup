@@ -40,7 +40,6 @@ esac
 sed -i "s/IP_ADDRESS/$IP_ADDRESS/g" $CONFIGDIR/consul_client.hcl
 sed -i "s/RETRY_JOIN/$RETRY_JOIN/g" $CONFIGDIR/consul_client.hcl
 sudo cp $CONFIGDIR/consul_client.hcl $CONSULCONFIGDIR/consul.hcl
-sudo cp $CONFIGDIR/consul_$CLOUD.service /etc/systemd/system/consul.service
 
 sudo systemctl enable consul.service
 sudo systemctl start consul.service
@@ -57,7 +56,6 @@ if [[ `wget -S --spider $NOMAD_BINARY  2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 fi
 
 sudo cp $CONFIGDIR/nomad_client.hcl $NOMADCONFIGDIR/nomad.hcl
-sudo cp $CONFIGDIR/nomad.service /etc/systemd/system/nomad.service
 
 sudo systemctl enable nomad.service
 sudo systemctl start nomad.service
