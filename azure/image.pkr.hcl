@@ -1,3 +1,12 @@
+packer {
+  required_plugins {
+    azure = {
+      source  = "github.com/hashicorp/azure"
+      version = "~> 2"
+    }
+  }
+}
+
 locals { 
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
 }
@@ -39,15 +48,15 @@ source "azure-arm" "hashistack" {
   tenant_id = var.tenant_id
   os_type = "Linux"
   image_publisher = "Canonical"
-  image_offer = "UbuntuServer"
-  image_sku = "16.04-LTS"
+  image_offer = "0001-com-ubuntu-server-jammy"
+  image_sku = "22_04-lts-gen2"
 
   azure_tags = {
     dept = "education"
   }
 
   location = var.location
-  vm_size = "Standard_A2"
+  vm_size = "Standard_B2s"
 }
 
 build {
