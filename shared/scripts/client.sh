@@ -57,6 +57,10 @@ fi
 
 sudo cp $CONFIGDIR/nomad_client.hcl $NOMADCONFIGDIR/nomad.hcl
 
+# Install and link CNI Plugins to support Consul Connect-Enabled jobs
+sudo apt install -y containernetworking-plugins
+sudo mkdir /opt/cni && sudo  ln -s /usr/lib/cni /opt/cni/bin
+
 sudo systemctl enable nomad.service
 sudo systemctl start nomad.service
 sleep 10
