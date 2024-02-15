@@ -13,7 +13,7 @@ HOME_DIR=ubuntu
 # Wait for network
 sleep 15
 
-DOCKER_BRIDGE_IP_ADDRESS=(`ifconfig docker0 2>/dev/null|awk '/inet addr:/ {print $2}'|sed 's/addr://'`)
+DOCKER_BRIDGE_IP_ADDRESS=(`ip -brief addr show docker0 | awk '{print $3}' | awk -F/ '{print $1}'`)
 CLOUD=$1
 SERVER_COUNT=$2
 RETRY_JOIN=$3
@@ -86,11 +86,13 @@ sudo cp $CONFIGDIR/consul-template.service /etc/systemd/system/consul-template.s
 
 echo "127.0.0.1 $(hostname)" | sudo tee --append /etc/hosts
 
-# Add Docker bridge network IP to /etc/resolv.conf (at the top)
 
-echo "nameserver $DOCKER_BRIDGE_IP_ADDRESS" | sudo tee /etc/resolv.conf.new
-cat /etc/resolv.conf | sudo tee --append /etc/resolv.conf.new
-sudo mv /etc/resolv.conf.new /etc/resolv.conf
+# Add systemd-resolved configuration for Consul DNS
+# ref: https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding#systemd-resolved-setup
+sed -i "s/DOCKER_BRIDGE_IP_ADDRESS/$DOCKER_BRIDGE_IP_ADDRESS/g" $CONFIGDIR/consul-systemd-resolved.conf
+sudo mkdir -p /etc/systemd/resolved.conf.d/
+sudo cp $CONFIGDIR/consul-systemd-resolved.conf /etc/systemd/resolved.conf.d/consul.conf
+sudo systemctl restart systemd-resolved
 
 # Set env vars for tool CLIs
 echo "export CONSUL_RPC_ADDR=$IP_ADDRESS:8400" | sudo tee --append /home/$HOME_DIR/.bashrc
