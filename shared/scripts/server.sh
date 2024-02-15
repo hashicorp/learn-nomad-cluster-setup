@@ -43,7 +43,6 @@ sed -i "s/IP_ADDRESS/$IP_ADDRESS/g" $CONFIGDIR/consul.hcl
 sed -i "s/SERVER_COUNT/$SERVER_COUNT/g" $CONFIGDIR/consul.hcl
 sed -i "s/RETRY_JOIN/$RETRY_JOIN/g" $CONFIGDIR/consul.hcl
 sudo cp $CONFIGDIR/consul.hcl $CONSULCONFIGDIR
-sudo cp $CONFIGDIR/consul_$CLOUD.service /etc/systemd/system/consul.service
 
 sudo systemctl enable consul.service
 sudo systemctl start consul.service
@@ -54,7 +53,10 @@ export CONSUL_RPC_ADDR=$IP_ADDRESS:8400
 # Vault
 sed -i "s/IP_ADDRESS/$IP_ADDRESS/g" $CONFIGDIR/vault.hcl
 sudo cp $CONFIGDIR/vault.hcl $VAULTCONFIGDIR
-sudo cp $CONFIGDIR/vault.service /etc/systemd/system/vault.service
+
+#FIXME: Change the systemd unit file so that the startup don't block
+sudo sed -i 's/Type=notify/Type=simple/' /lib/systemd/system/vault.service
+sudo systemctl daemon-reload
 
 sudo systemctl enable vault.service
 sudo systemctl start vault.service
@@ -71,7 +73,6 @@ fi
 
 sed -i "s/SERVER_COUNT/$SERVER_COUNT/g" $CONFIGDIR/nomad.hcl
 sudo cp $CONFIGDIR/nomad.hcl $NOMADCONFIGDIR
-sudo cp $CONFIGDIR/nomad.service /etc/systemd/system/nomad.service
 
 sudo systemctl enable nomad.service
 sudo systemctl start nomad.service
