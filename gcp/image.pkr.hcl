@@ -1,3 +1,12 @@
+packer {
+  required_plugins {
+    googlecompute = {
+      version = ">= 1.1.4"
+      source  = "github.com/hashicorp/googlecompute"
+    }
+  }
+}
+
 locals {
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
 }
@@ -13,7 +22,7 @@ variable "zone" {
 source "googlecompute" "hashistack" {
   image_name   = "hashistack-${local.timestamp}"
   project_id   = var.project
-  source_image = "ubuntu-minimal-1804-bionic-v20221026"
+  source_image = "ubuntu-minimal-2204-jammy-v20231213b"
   ssh_username = "packer"
   zone         = var.zone
 }

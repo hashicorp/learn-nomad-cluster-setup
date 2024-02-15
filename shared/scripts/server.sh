@@ -13,7 +13,7 @@ HOME_DIR=ubuntu
 # Wait for network
 sleep 15
 
-DOCKER_BRIDGE_IP_ADDRESS=(`ifconfig docker0 2>/dev/null|awk '/inet addr:/ {print $2}'|sed 's/addr://'`)
+DOCKER_BRIDGE_IP_ADDRESS=(`ip -brief addr show docker0 | awk '{print $3}' | awk -F/ '{print $1}'`)
 CLOUD=$1
 SERVER_COUNT=$2
 RETRY_JOIN=$3
@@ -43,7 +43,6 @@ sed -i "s/IP_ADDRESS/$IP_ADDRESS/g" $CONFIGDIR/consul.hcl
 sed -i "s/SERVER_COUNT/$SERVER_COUNT/g" $CONFIGDIR/consul.hcl
 sed -i "s/RETRY_JOIN/$RETRY_JOIN/g" $CONFIGDIR/consul.hcl
 sudo cp $CONFIGDIR/consul.hcl $CONSULCONFIGDIR
-sudo cp $CONFIGDIR/consul_$CLOUD.service /etc/systemd/system/consul.service
 
 sudo systemctl enable consul.service
 sudo systemctl start consul.service
@@ -54,7 +53,10 @@ export CONSUL_RPC_ADDR=$IP_ADDRESS:8400
 # Vault
 sed -i "s/IP_ADDRESS/$IP_ADDRESS/g" $CONFIGDIR/vault.hcl
 sudo cp $CONFIGDIR/vault.hcl $VAULTCONFIGDIR
-sudo cp $CONFIGDIR/vault.service /etc/systemd/system/vault.service
+
+#FIXME: Change the systemd unit file so that the startup don't block
+sudo sed -i 's/Type=notify/Type=simple/' /lib/systemd/system/vault.service
+sudo systemctl daemon-reload
 
 sudo systemctl enable vault.service
 sudo systemctl start vault.service
@@ -71,7 +73,6 @@ fi
 
 sed -i "s/SERVER_COUNT/$SERVER_COUNT/g" $CONFIGDIR/nomad.hcl
 sudo cp $CONFIGDIR/nomad.hcl $NOMADCONFIGDIR
-sudo cp $CONFIGDIR/nomad.service /etc/systemd/system/nomad.service
 
 sudo systemctl enable nomad.service
 sudo systemctl start nomad.service
@@ -86,11 +87,13 @@ sudo cp $CONFIGDIR/consul-template.service /etc/systemd/system/consul-template.s
 
 echo "127.0.0.1 $(hostname)" | sudo tee --append /etc/hosts
 
-# Add Docker bridge network IP to /etc/resolv.conf (at the top)
 
-echo "nameserver $DOCKER_BRIDGE_IP_ADDRESS" | sudo tee /etc/resolv.conf.new
-cat /etc/resolv.conf | sudo tee --append /etc/resolv.conf.new
-sudo mv /etc/resolv.conf.new /etc/resolv.conf
+# Add systemd-resolved configuration for Consul DNS
+# ref: https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding#systemd-resolved-setup
+sed -i "s/DOCKER_BRIDGE_IP_ADDRESS/$DOCKER_BRIDGE_IP_ADDRESS/g" $CONFIGDIR/consul-systemd-resolved.conf
+sudo mkdir -p /etc/systemd/resolved.conf.d/
+sudo cp $CONFIGDIR/consul-systemd-resolved.conf /etc/systemd/resolved.conf.d/consul.conf
+sudo systemctl restart systemd-resolved
 
 # Set env vars for tool CLIs
 echo "export CONSUL_RPC_ADDR=$IP_ADDRESS:8400" | sudo tee --append /home/$HOME_DIR/.bashrc

@@ -1,3 +1,13 @@
+packer {
+  required_plugins {
+    amazon = {
+      source  = "github.com/hashicorp/amazon"
+      version = "~> 1"
+    }
+  }
+}
+
+
 locals { 
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
 }
@@ -10,7 +20,7 @@ data "amazon-ami" "hashistack" {
   filters = {
     architecture                       = "x86_64"
     "block-device-mapping.volume-type" = "gp2"
-    name                               = "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"
+    name                               = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
     root-device-type                   = "ebs"
     virtualization-type                = "hvm"
   }
