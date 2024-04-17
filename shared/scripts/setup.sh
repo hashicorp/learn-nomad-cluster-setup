@@ -9,23 +9,11 @@ cd /ops
 
 CONFIGDIR=/ops/shared/config
 
-CONSULVERSION=1.11.4
-CONSULDOWNLOAD=https://releases.hashicorp.com/consul/${CONSULVERSION}/consul_${CONSULVERSION}_linux_amd64.zip
-CONSULCONFIGDIR=/etc/consul.d
-CONSULDIR=/opt/consul
+CONSULVERSION=1.17.1
+VAULTVERSION=1.15.4
+NOMADVERSION=1.7.2
+CONSULTEMPLATEVERSION=0.36.0
 
-VAULTVERSION=1.5.3
-VAULTDOWNLOAD=https://releases.hashicorp.com/vault/${VAULTVERSION}/vault_${VAULTVERSION}_linux_amd64.zip
-VAULTCONFIGDIR=/etc/vault.d
-VAULTDIR=/opt/vault
-
-NOMADVERSION=1.3.3
-NOMADDOWNLOAD=https://releases.hashicorp.com/nomad/${NOMADVERSION}/nomad_${NOMADVERSION}_linux_amd64.zip
-NOMADCONFIGDIR=/etc/nomad.d
-NOMADDIR=/opt/nomad
-
-CONSULTEMPLATEVERSION=0.25.1
-CONSULTEMPLATEDOWNLOAD=https://releases.hashicorp.com/consul-template/${CONSULTEMPLATEVERSION}/consul-template_${CONSULTEMPLATEVERSION}_linux_amd64.zip
 CONSULTEMPLATECONFIGDIR=/etc/consul-template.d
 CONSULTEMPLATEDIR=/opt/consul-template
 
@@ -48,7 +36,7 @@ case $CLOUD_ENV in
     ;;
 esac
 
-sudo apt-get update
+sudo add-apt-repository universe && sudo apt-get update
 sudo apt-get install -y unzip tree redis-tools jq curl tmux
 sudo apt-get clean
 
@@ -57,59 +45,7 @@ sudo apt-get clean
 
 sudo ufw disable || echo "ufw not installed"
 
-# Consul
-
-curl -L $CONSULDOWNLOAD > consul.zip
-
-## Install
-sudo unzip consul.zip -d /usr/local/bin
-sudo chmod 0755 /usr/local/bin/consul
-sudo chown root:root /usr/local/bin/consul
-
-## Configure
-sudo mkdir -p $CONSULCONFIGDIR
-sudo chmod 755 $CONSULCONFIGDIR
-sudo mkdir -p $CONSULDIR
-sudo chmod 755 $CONSULDIR
-
-# Vault
-
-curl -L $VAULTDOWNLOAD > vault.zip
-
-## Install
-sudo unzip vault.zip -d /usr/local/bin
-sudo chmod 0755 /usr/local/bin/vault
-sudo chown root:root /usr/local/bin/vault
-
-## Configure
-sudo mkdir -p $VAULTCONFIGDIR
-sudo chmod 755 $VAULTCONFIGDIR
-sudo mkdir -p $VAULTDIR
-sudo chmod 755 $VAULTDIR
-
-# Nomad
-
-curl -L $NOMADDOWNLOAD > nomad.zip
-
-## Install
-sudo unzip nomad.zip -d /usr/local/bin
-sudo chmod 0755 /usr/local/bin/nomad
-sudo chown root:root /usr/local/bin/nomad
-
-## Configure
-sudo mkdir -p $NOMADCONFIGDIR
-sudo chmod 755 $NOMADCONFIGDIR
-sudo mkdir -p $NOMADDIR
-sudo chmod 755 $NOMADDIR
-
 # Consul Template 
-
-curl -L $CONSULTEMPLATEDOWNLOAD > consul-template.zip
-
-## Install
-sudo unzip consul-template.zip -d /usr/local/bin
-sudo chmod 0755 /usr/local/bin/consul-template
-sudo chown root:root /usr/local/bin/consul-template
 
 ## Configure
 sudo mkdir -p $CONSULTEMPLATECONFIGDIR
@@ -131,3 +67,15 @@ sudo add-apt-repository -y ppa:openjdk-r/ppa
 sudo apt-get update 
 sudo apt-get install -y openjdk-8-jdk
 JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
+
+
+# Install HashiCorp Apt Repository
+wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+
+# Install HashiStack Packages
+sudo apt-get update && sudo apt-get -y install \
+	consul=$CONSULVERSION* \
+	nomad=$NOMADVERSION* \
+	vault=$VAULTVERSION* \
+	consul-template=$CONSULTEMPLATEVERSION*
