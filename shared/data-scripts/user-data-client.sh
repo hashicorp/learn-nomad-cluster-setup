@@ -7,8 +7,13 @@ sudo bash /ops/shared/scripts/client.sh "${cloud_env}" '${retry_join}' "${nomad_
 
 NOMAD_HCL_PATH="/etc/nomad.d/nomad.hcl"
 CLOUD_ENV="${cloud_env}"
+CONSULCONFIGDIR=/etc/consul.d
 
 sed -i "s/CONSUL_TOKEN/${nomad_consul_token_secret}/g" $NOMAD_HCL_PATH
+
+# Add auto-join token to consul agent for dns and start consul
+sed -i "s/AGENT_TOKEN/${nomad_consul_token_secret}/g" $CONSULCONFIGDIR/consul.hcl
+sudo systemctl start consul.service
 
 case $CLOUD_ENV in
   aws)
