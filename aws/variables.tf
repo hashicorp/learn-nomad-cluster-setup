@@ -11,10 +11,6 @@ variable "ami" {
   description = "The AMI to use for the server and client machines. Output from the Packer build process."
 }
 
-variable "key_name" {
-  description = "The name of the AWS SSH key to be loaded on the instance at provisioning."
-}
-
 variable "retry_join" {
   description = "Used by Consul to automatically form a cluster."
   type        = string
@@ -49,14 +45,6 @@ variable "client_count" {
 variable "root_block_device_size" {
   description = "The volume size of the root block device."
   default     = 16
-}
-
-variable "nomad_consul_token_id" {
-  description = "Accessor ID for the Consul ACL token used by Nomad servers and clients. Must be a UUID."
-}
-
-variable "nomad_consul_token_secret" {
-  description = "Secret ID for the Consul ACL token used by Nomad servers and clients. Must be a UUID."
 }
 
 variable "nomad_binary" {
