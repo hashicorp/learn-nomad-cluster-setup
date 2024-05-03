@@ -2,10 +2,10 @@
 
 NOMAD_USER_TOKEN_FILENAME="nomad.token"
 LB_ADDRESS=$(terraform output -raw lb_address_consul_nomad)
-CONSUL_BOOTSTRAP_TOKEN=$(terraform output -raw consul_bootstrap_token_secret)
+CONSUL_TOKEN=$(terraform output -raw consul_token_secret)
 
 # Get nomad user token from consul kv
-NOMAD_TOKEN=$(curl -s --header "Authorization: Bearer ${CONSUL_BOOTSTRAP_TOKEN}" "${LB_ADDRESS}:8500/v1/kv/nomad_user_token?raw")
+NOMAD_TOKEN=$(curl -s --header "Authorization: Bearer ${CONSUL_TOKEN}" "${LB_ADDRESS}:8500/v1/kv/nomad_user_token?raw")
 
 # Save token to file if file doesn't already exist
 if [ ! -f $NOMAD_USER_TOKEN_FILENAME ]; then
@@ -14,7 +14,7 @@ if [ ! -f $NOMAD_USER_TOKEN_FILENAME ]; then
     # Check length of token to see if retrieval worked before deleting from KV
     if [ ${#NOMAD_TOKEN} -eq 36 ]; then
         # Delete nomad user token from consul kv
-        DELETE_TOKEN=$(curl -s -X DELETE --header "Authorization: Bearer ${CONSUL_BOOTSTRAP_TOKEN}" "${LB_ADDRESS}:8500/v1/kv/nomad_user_token")
+        DELETE_TOKEN=$(curl -s -X DELETE --header "Authorization: Bearer ${CONSUL_TOKEN}" "${LB_ADDRESS}:8500/v1/kv/nomad_user_token")
 
         echo -e "\nThe Nomad user token has been saved locally to $NOMAD_USER_TOKEN_FILENAME and deleted from the Consul KV store."
 

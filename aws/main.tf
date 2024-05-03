@@ -117,10 +117,32 @@ resource "aws_security_group" "clients_ingress" {
   # }
 }
 
+resource "tls_private_key" "pk" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "nomad" {
+  key_name   = "nomad-aws-key-pair"
+  public_key = tls_private_key.pk.public_key_openssh
+}
+
+resource "local_file" "nomad_key" {
+  content         = tls_private_key.pk.private_key_pem
+  filename        = "./nomad-aws-key-pair.pem"
+  file_permission = "0400"
+}
+
+resource "random_uuid" "nomad_id" {
+}
+
+resource "random_uuid" "nomad_token" {
+}
+
 resource "aws_instance" "server" {
   ami                    = var.ami
   instance_type          = var.server_instance_type
-  key_name               = var.key_name
+  key_name               = aws_key_pair.nomad.key_name
   vpc_security_group_ids = [aws_security_group.consul_nomad_ui_ingress.id, aws_security_group.ssh_ingress.id, aws_security_group.allow_all_internal.id]
   count                  = var.server_count
 
@@ -150,8 +172,8 @@ resource "aws_instance" "server" {
     cloud_env                 = "aws"
     retry_join                = var.retry_join
     nomad_binary              = var.nomad_binary
-    nomad_consul_token_id     = var.nomad_consul_token_id
-    nomad_consul_token_secret = var.nomad_consul_token_secret
+    nomad_consul_token_id     = random_uuid.nomad_id.result
+    nomad_consul_token_secret = random_uuid.nomad_token.result
   })
   iam_instance_profile = aws_iam_instance_profile.instance_profile.name
 
@@ -164,7 +186,7 @@ resource "aws_instance" "server" {
 resource "aws_instance" "client" {
   ami                    = var.ami
   instance_type          = var.client_instance_type
-  key_name               = var.key_name
+  key_name               = aws_key_pair.nomad.key_name
   vpc_security_group_ids = [aws_security_group.consul_nomad_ui_ingress.id, aws_security_group.ssh_ingress.id, aws_security_group.clients_ingress.id, aws_security_group.allow_all_internal.id]
   count                  = var.client_count
   depends_on             = [aws_instance.server]
@@ -201,7 +223,8 @@ resource "aws_instance" "client" {
     cloud_env                 = "aws"
     retry_join                = var.retry_join
     nomad_binary              = var.nomad_binary
-    nomad_consul_token_secret = var.nomad_consul_token_secret
+    nomad_consul_token_id     = random_uuid.nomad_id.result
+    nomad_consul_token_secret = random_uuid.nomad_token.result
   })
   iam_instance_profile = aws_iam_instance_profile.instance_profile.name
 
