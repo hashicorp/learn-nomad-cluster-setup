@@ -19,13 +19,13 @@ nomad_consul_token_secret = "123e4567-e89b-12d3-a456-426614174000"
 
 # Range to allow SSH and Consul/Nomad UI access
 # Ports 22, 8500, 4646
-allowlist_ip = "0.0.0.0/0"
 # Default password for instances
-admin_password = "password"
 
 # These variables will default to the values shown
 # and do not need to be updated unless you want to
 # change them
+# admin_password                  = "password"
+# allowlist_ip                    = "0.0.0.0/0"
 # name                            = "nomad"
 # server_instance_type            = "t2.micro"
 # server_count                    = "3"

@@ -9,12 +9,9 @@ terraform {
 
 provider "azurerm" {
   features {}
-
-  subscription_id = var.subscription_id
-  client_id = var.client_id
-  client_secret = var.client_secret
-  tenant_id = var.tenant_id
 }
+
+data "azurerm_client_config" "current" {}
 
 resource "azurerm_resource_group" "hashistack" {
   name     = "hashistack"
@@ -162,11 +159,7 @@ resource "azurerm_linux_virtual_machine" "server" {
   size                  = "${var.server_instance_type}"
   count                 = "${var.server_count}"
 
-  boot_diagnostics {
-    storage_account_uri = "https://${var.storage_account}.blob.core.windows.net/"
-  }
-
-  source_image_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Compute/images/${var.image_name}"
+  source_image_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Compute/images/${var.image_name}"
 
   os_disk {
     name              = "hashistack-server-osdisk-${count.index}"
@@ -223,11 +216,7 @@ resource "azurerm_linux_virtual_machine" "client" {
   count                 = "${var.client_count}"
   depends_on            = [azurerm_linux_virtual_machine.server]
 
-  boot_diagnostics {
-    storage_account_uri = "https://${var.storage_account}.blob.core.windows.net/"
-  }
-
-  source_image_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Compute/images/${var.image_name}"
+  source_image_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Compute/images/${var.image_name}"
 
   os_disk {
     name              = "hashistack-client-osdisk-${count.index}"

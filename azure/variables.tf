@@ -11,32 +11,13 @@ variable "image_name" {
   description = "The Azure image to use for the server and client machines. Output from the Packer build process. This is the image NAME not the ID."
 }
 
-variable "subscription_id" {
-  description = "The Azure subscription ID to use."
-}
-
 variable "resource_group_name" {
   description = "The Azure resource group name to use."
 }
 
-variable "storage_account" {
-  description = "The storage account name. Used for boot diagnostics."
-}
-
-variable "client_id" {
-  description = "The Azure client ID to use."
-}
-
-variable "client_secret" {
-  description = "The Azure client secret to use."
-}
-
-variable "tenant_id" {
-  description = "The Azure tenant ID to use."
-}
-
 variable "admin_password" {
   description = "The password for the ubuntu account on the server and client machines."
+  default     = "password"
 }
 
 variable "retry_join" {
