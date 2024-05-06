@@ -31,6 +31,10 @@ case $CLOUD_ENV in
     sudo apt-get install -y software-properties-common
     ;;
 
+  scaleway)
+    sudo apt-get install -y software-properties-common
+    ;;
+
   *)
     exit "CLOUD_ENV not set to one of aws, gce, or azure - exiting."
     ;;
