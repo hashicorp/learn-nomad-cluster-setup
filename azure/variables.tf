@@ -13,16 +13,7 @@ variable "image_name" {
 
 variable "resource_group_name" {
   description = "The Azure resource group name to use."
-}
-
-variable "admin_password" {
-  description = "The password for the ubuntu account on the server and client machines."
-  default     = "password"
-}
-
-variable "retry_join" {
-  description = "Used by Consul to automatically form a cluster."
-  type        = string
+  default     = "hashistack"
 }
 
 variable "allowlist_ip" {
@@ -48,19 +39,6 @@ variable "server_count" {
 variable "client_count" {
   description = "The number of clients to provision."
   default     = "3"
-}
-
-variable "root_block_device_size" {
-  description = "The volume size of the root block device."
-  default     = 16
-}
-
-variable "nomad_consul_token_id" {
-  description = "Accessor ID for the Consul ACL token used by Nomad servers and clients. Must be a UUID."
-}
-
-variable "nomad_consul_token_secret" {
-  description = "Secret ID for the Consul ACL token used by Nomad servers and clients. Must be a UUID."
 }
 
 variable "nomad_binary" {

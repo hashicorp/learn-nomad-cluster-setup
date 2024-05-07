@@ -1,17 +1,36 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "=3.0.0"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {}
-}
-
 data "azurerm_client_config" "current" {}
+data "azuread_client_config" "current" {}
+
+resource "azurerm_role_assignment" "role_consul_autojoin" {
+  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
+  role_definition_name = "Contributor"
+  principal_id         = "${azuread_service_principal.sp_consul.id}"
+}
+
+resource "azuread_application_registration" "app_consulautojoin" {
+  display_name = "consul-autojoin-authapp"
+}
+
+resource "azuread_application_password" "apppwd_consulautojoin" {
+  application_id = azuread_application_registration.app_consulautojoin.id
+}
+
+resource "azuread_service_principal" "sp_consul" {
+  client_id = azuread_application_registration.app_consulautojoin.client_id
+  owners = [ data.azuread_client_config.current.object_id ]
+}
+
+resource "random_uuid" "nomad_id" {
+}
+
+resource "random_uuid" "nomad_token" {
+}
+
+resource "random_string" "vm_password" {
+  length           = 16
+  special          = true
+  override_special = "/@£$"
+}
 
 resource "azurerm_resource_group" "hashistack" {
   name     = "hashistack"
@@ -169,15 +188,15 @@ resource "azurerm_linux_virtual_machine" "server" {
 
   computer_name  = "hashistack-server-${count.index}"
   admin_username = "ubuntu"
-  admin_password = var.admin_password
+  admin_password = random_string.vm_password.result
   custom_data    = "${base64encode(templatefile("${path.module}/../shared/data-scripts/user-data-server.sh", {
       region                    = var.location
       cloud_env                 = "azure"
       server_count              = "${var.server_count}"
-      retry_join                = var.retry_join
+      retry_join                = local.retry_join
       nomad_binary              = var.nomad_binary
-      nomad_consul_token_id     = var.nomad_consul_token_id
-      nomad_consul_token_secret = var.nomad_consul_token_secret
+      nomad_consul_token_id     = random_uuid.nomad_id.result
+      nomad_consul_token_secret = random_uuid.nomad_token.result
   }))}"
 
   disable_password_authentication = false
@@ -226,14 +245,18 @@ resource "azurerm_linux_virtual_machine" "client" {
 
   computer_name  = "hashistack-client-${count.index}"
   admin_username = "ubuntu"
-  admin_password = var.admin_password
+  admin_password = random_string.vm_password.result
   custom_data    = "${base64encode(templatefile("${path.module}/../shared/data-scripts/user-data-client.sh", {
       region                    = var.location
       cloud_env                 = "azure"
-      retry_join                = var.retry_join
+      retry_join                = local.retry_join
       nomad_binary              = var.nomad_binary
-      nomad_consul_token_secret = var.nomad_consul_token_secret
+      nomad_consul_token_secret = random_uuid.nomad_token.result
   }))}"
   
   disable_password_authentication = false
+}
+
+locals {
+  retry_join = "provider=azure tag_name=ConsulAutoJoin tag_value=auto-join subscription_id=${data.azurerm_client_config.current.subscription_id} tenant_id=${data.azurerm_client_config.current.tenant_id} client_id=${azuread_application_registration.app_consulautojoin.client_id} secret_access_key='${azuread_application_password.apppwd_consulautojoin.value}'"
 }
