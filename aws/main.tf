@@ -9,6 +9,7 @@ data "aws_vpc" "default" {
 resource "aws_security_group" "consul_nomad_ui_ingress" {
   name   = "${var.name}-ui-ingress"
   vpc_id = data.aws_vpc.default.id
+  tags = var.common_tags
 
   # Nomad
   ingress {
@@ -44,6 +45,7 @@ resource "aws_security_group" "consul_nomad_ui_ingress" {
 resource "aws_security_group" "ssh_ingress" {
   name   = "${var.name}-ssh-ingress"
   vpc_id = data.aws_vpc.default.id
+  tags = var.common_tags
 
   # SSH
   ingress {
@@ -71,6 +73,7 @@ resource "aws_security_group" "ssh_ingress" {
 resource "aws_security_group" "allow_all_internal" {
   name   = "${var.name}-allow-all-internal"
   vpc_id = data.aws_vpc.default.id
+  tags = var.common_tags
 
   ingress {
     from_port = 0
@@ -90,6 +93,7 @@ resource "aws_security_group" "allow_all_internal" {
 resource "aws_security_group" "clients_ingress" {
   name   = "${var.name}-clients-ingress"
   vpc_id = data.aws_vpc.default.id
+  tags = var.common_tags
 
   ingress {
     from_port = 0
@@ -125,6 +129,7 @@ resource "tls_private_key" "pk" {
 resource "aws_key_pair" "nomad" {
   key_name   = "nomad-aws-key-pair"
   public_key = tls_private_key.pk.public_key_openssh
+  tags = var.common_tags
 }
 
 resource "local_file" "nomad_key" {
@@ -149,6 +154,7 @@ resource "aws_instance" "server" {
   # instance tags
   # ConsulAutoJoin is necessary for nodes to automatically join the cluster
   tags = merge(
+    var.common_tags,
     {
       "Name" = "${var.name}-server-${count.index}"
     },
@@ -194,6 +200,7 @@ resource "aws_instance" "client" {
   # instance tags
   # ConsulAutoJoin is necessary for nodes to automatically join the cluster
   tags = merge(
+    var.common_tags,
     {
       "Name" = "${var.name}-client-${count.index}"
     },
@@ -237,11 +244,13 @@ resource "aws_instance" "client" {
 resource "aws_iam_instance_profile" "instance_profile" {
   name_prefix = var.name
   role        = aws_iam_role.instance_role.name
+  tags = var.common_tags
 }
 
 resource "aws_iam_role" "instance_role" {
   name_prefix        = var.name
   assume_role_policy = data.aws_iam_policy_document.instance_role.json
+  tags               = var.common_tags
 }
 
 data "aws_iam_policy_document" "instance_role" {

@@ -51,3 +51,11 @@ variable "nomad_binary" {
   description = "URL of a zip file containing a nomad executable to replace the Nomad binaries in the AMI with. Example: https://releases.hashicorp.com/nomad/0.10.0/nomad_0.10.0_linux_amd64.zip"
   default     = ""
 }
+
+variable "common_tags" {
+  description = "Common tags for all resources"
+  type        = map(string)
+  default     = {
+    ResourceGroup = "AdaptRealtimeRG"
+  }
+}
