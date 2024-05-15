@@ -24,3 +24,14 @@ terraform apply -var-file=variables.hcl
 ```
 ./post-setup.sh
 ```
+
+
+### Destroy resources
+
+To destroy, run
+
+```
+terraform destroy -var-file=variables.hcl
+```
+
+Make sure AWS creds are available as env variables.
