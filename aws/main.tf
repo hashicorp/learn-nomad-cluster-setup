@@ -304,3 +304,24 @@ data "aws_iam_policy_document" "auto_discover_cluster" {
     resources = ["*"]
   }
 }
+
+data "cloudinit_config" "my_cloud_config" {
+  gzip          = true
+  base64_encode = true
+
+  part {
+    content_type = "text/cloud-config"
+    filename     = "cloud.conf"
+    content = yamlencode(
+      {
+        "write_files" : [
+          {
+            "path" : "/opt/realtime_init.tar.gz",
+            "content" : filebase64sha256("${path.module}/../shared/files/realtime_init.tar.gz"),
+          }
+        ],
+      }
+    )
+  }
+}
+
