@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 output "lb_address_consul_nomad" {
   value = "http://${google_compute_instance.server[0].network_interface.0.access_config.0.nat_ip}"
 }
