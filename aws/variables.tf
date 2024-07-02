@@ -1,4 +1,4 @@
-variable "name" {
+variable "name_prefix" {
   description = "Prefix used to name various infrastructure components. Alphanumeric characters only."
   default     = "nomad"
 }

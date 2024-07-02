@@ -63,7 +63,7 @@ resource "azurerm_subnet_network_security_group_association" "hashistack-sg-asso
 }
 
 resource "azurerm_network_security_rule" "nomad_ui_ingress" {
-  name                        = "${var.name}-nomad-ui-ingress"
+  name                        = "${var.name_prefix}-nomad-ui-ingress"
   resource_group_name         = "${azurerm_resource_group.hashistack.name}"
   network_security_group_name = "${azurerm_network_security_group.hashistack-sg.name}"
 
@@ -79,7 +79,7 @@ resource "azurerm_network_security_rule" "nomad_ui_ingress" {
 }
 
 resource "azurerm_network_security_rule" "consul_ui_ingress" {
-  name                        = "${var.name}-consul-ui-ingress"
+  name                        = "${var.name_prefix}-consul-ui-ingress"
   resource_group_name         = "${azurerm_resource_group.hashistack.name}"
   network_security_group_name = "${azurerm_network_security_group.hashistack-sg.name}"
 
@@ -95,7 +95,7 @@ resource "azurerm_network_security_rule" "consul_ui_ingress" {
 }
 
 resource "azurerm_network_security_rule" "ssh_ingress" {
-  name                        = "${var.name}-ssh-ingress"
+  name                        = "${var.name_prefix}-ssh-ingress"
   resource_group_name         = "${azurerm_resource_group.hashistack.name}"
   network_security_group_name = "${azurerm_network_security_group.hashistack-sg.name}"
 
@@ -111,7 +111,7 @@ resource "azurerm_network_security_rule" "ssh_ingress" {
 }
 
 resource "azurerm_network_security_rule" "allow_all_internal" {
-  name                        = "${var.name}-allow-all-internal"
+  name                        = "${var.name_prefix}-allow-all-internal"
   resource_group_name         = "${azurerm_resource_group.hashistack.name}"
   network_security_group_name = "${azurerm_network_security_group.hashistack-sg.name}"
 
@@ -127,7 +127,7 @@ resource "azurerm_network_security_rule" "allow_all_internal" {
 }
 
 resource "azurerm_network_security_rule" "clients_ingress" {
-  name                        = "${var.name}-clients-ingress"
+  name                        = "${var.name_prefix}-clients-ingress"
   resource_group_name         = "${azurerm_resource_group.hashistack.name}"
   network_security_group_name = "${azurerm_network_security_group.hashistack-sg.name}"
 

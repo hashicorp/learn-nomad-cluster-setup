@@ -10,7 +10,7 @@ machine_image             = "MACHINE_IMAGE_FROM_PACKER_BUILD"
 # and do not need to be updated unless you want to
 # change them
 # allowlist_ip            = "0.0.0.0/0"
-# name                    = "nomad"
+# name_prefix             = "nomad"
 # server_instance_type    = "t2.micro"
 # server_count            = "3"
 # client_instance_type    = "t2.micro"

@@ -14,7 +14,7 @@ variable "machine_image" {
   description = "The compute image to use for the server and client machines. Output from the Packer build process."
 }
 
-variable "name" {
+variable "name_prefix" {
   description = "Prefix used to name various infrastructure components. Alphanumeric characters only."
   default     = "nomad"
 }

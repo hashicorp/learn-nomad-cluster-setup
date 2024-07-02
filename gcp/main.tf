@@ -5,11 +5,11 @@ provider "google" {
 }
 
 resource "google_compute_network" "hashistack" {
-  name = "hashistack-${var.name}"
+  name = "hashistack-${var.name_prefix}"
 }
 
 resource "google_compute_firewall" "consul_nomad_ui_ingress" {
-  name          = "${var.name}-ui-ingress"
+  name          = "${var.name_prefix}-ui-ingress"
   network       = google_compute_network.hashistack.name
   source_ranges = [var.allowlist_ip]
 
@@ -27,7 +27,7 @@ resource "google_compute_firewall" "consul_nomad_ui_ingress" {
 }
 
 resource "google_compute_firewall" "ssh_ingress" {
-  name          = "${var.name}-ssh-ingress"
+  name          = "${var.name_prefix}-ssh-ingress"
   network       = google_compute_network.hashistack.name
   source_ranges = [var.allowlist_ip]
 
@@ -39,7 +39,7 @@ resource "google_compute_firewall" "ssh_ingress" {
 }
 
 resource "google_compute_firewall" "allow_all_internal" {
-  name        = "${var.name}-allow-all-internal"
+  name        = "${var.name_prefix}-allow-all-internal"
   network     = google_compute_network.hashistack.name
   source_tags = ["auto-join"]
 
@@ -59,7 +59,7 @@ resource "google_compute_firewall" "allow_all_internal" {
 }
 
 resource "google_compute_firewall" "clients_ingress" {
-  name          = "${var.name}-clients-ingress"
+  name          = "${var.name_prefix}-clients-ingress"
   network       = google_compute_network.hashistack.name
   source_ranges = [var.allowlist_ip]
   target_tags   = ["nomad-clients"]
@@ -82,7 +82,7 @@ resource "random_uuid" "nomad_token" {
 
 resource "google_compute_instance" "server" {
   count        = var.server_count
-  name         = "${var.name}-server-${count.index}"
+  name         = "${var.name_prefix}-server-${count.index}"
   machine_type = var.server_instance_type
   zone         = var.zone
   tags         = ["auto-join"]
@@ -124,7 +124,7 @@ resource "google_compute_instance" "server" {
 
 resource "google_compute_instance" "client" {
   count        = var.client_count
-  name         = "${var.name}-client-${count.index}"
+  name         = "${var.name_prefix}-client-${count.index}"
   machine_type = var.client_instance_type
   zone         = var.zone
   tags         = ["auto-join", "nomad-clients"]

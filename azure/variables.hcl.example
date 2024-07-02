@@ -9,7 +9,7 @@ image_name = "IMAGE_FROM_PACKER"
 # change them
 # resource_group_name             = "hashistack"
 # allowlist_ip                    = "0.0.0.0/0"
-# name                            = "nomad"
+# name_prefix             = "nomad"
 # server_instance_type            = "t2.micro"
 # server_count                    = "3"
 # client_instance_type            = "t2.micro"
