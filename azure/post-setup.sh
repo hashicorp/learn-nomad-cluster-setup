@@ -7,7 +7,7 @@ CONSUL_BOOTSTRAP_TOKEN=$(terraform output -raw consul_bootstrap_token_secret)
 # Get nomad user token from consul kv
 NOMAD_TOKEN=$(curl -s --header "Authorization: Bearer ${CONSUL_BOOTSTRAP_TOKEN}" "${LB_ADDRESS}:8500/v1/kv/nomad_user_token?raw")
 
-echo $NOMAD_TOKEN
+# echo $NOMAD_TOKEN
 
 # Save token to file if file doesn't already exist
 if [ ! -f $NOMAD_USER_TOKEN_FILENAME ]; then
