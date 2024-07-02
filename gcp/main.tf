@@ -74,6 +74,12 @@ resource "google_compute_firewall" "clients_ingress" {
   }
 }
 
+resource "random_uuid" "nomad_id" {
+}
+
+resource "random_uuid" "nomad_token" {
+}
+
 resource "google_compute_instance" "server" {
   count        = var.server_count
   name         = "${var.name}-server-${count.index}"
@@ -109,10 +115,10 @@ resource "google_compute_instance" "server" {
     server_count              = var.server_count
     region                    = var.region
     cloud_env                 = "gce"
-    retry_join                = var.retry_join
+    retry_join                = local.consul_retry_join
     nomad_binary              = var.nomad_binary
-    nomad_consul_token_id     = var.nomad_consul_token_id
-    nomad_consul_token_secret = var.nomad_consul_token_secret
+    nomad_consul_token_id     = random_uuid.nomad_id.result
+    nomad_consul_token_secret = random_uuid.nomad_token.result
   })
 }
 
@@ -150,8 +156,12 @@ resource "google_compute_instance" "client" {
   metadata_startup_script = templatefile("${path.module}/../shared/data-scripts/user-data-client.sh", {
     region                    = var.region
     cloud_env                 = "gce"
-    retry_join                = var.retry_join
+    retry_join                = local.consul_retry_join
     nomad_binary              = var.nomad_binary
-    nomad_consul_token_secret = var.nomad_consul_token_secret
+    nomad_consul_token_secret = random_uuid.nomad_token.result
   })
+}
+
+locals {
+  consul_retry_join = "project_name=${var.project} zone_pattern=${var.zone} provider=gce tag_value=auto-join"
 }

@@ -19,11 +19,6 @@ variable "name" {
   default     = "nomad"
 }
 
-variable "retry_join" {
-  description = "Used by Consul to automatically form a cluster."
-  type        = string
-}
-
 variable "allowlist_ip" {
   description = "IP to allow access for the security groups (set 0.0.0.0/0 for world)"
   default     = "0.0.0.0/0"
@@ -52,14 +47,6 @@ variable "client_count" {
 variable "root_block_device_size" {
   description = "The volume size of the root block device."
   default     = 20
-}
-
-variable "nomad_consul_token_id" {
-  description = "Accessor ID for the Consul ACL token used by Nomad servers and clients. Must be a UUID."
-}
-
-variable "nomad_consul_token_secret" {
-  description = "Secret ID for the Consul ACL token used by Nomad servers and clients. Must be a UUID."
 }
 
 variable "nomad_binary" {
