@@ -17,6 +17,7 @@ variable "location" {
 
 variable "resource_group_name" {
   type = string
+  default = "hashistack"
 }
 
 source "azure-arm" "hashistack" {
