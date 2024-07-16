@@ -7,7 +7,7 @@ data "aws_vpc" "default" {
 }
 
 resource "aws_security_group" "consul_nomad_ui_ingress" {
-  name   = "${var.name}-ui-ingress"
+  name   = "${var.name_prefix}-ui-ingress"
   vpc_id = data.aws_vpc.default.id
 
   # Nomad
@@ -42,7 +42,7 @@ resource "aws_security_group" "consul_nomad_ui_ingress" {
 }
 
 resource "aws_security_group" "ssh_ingress" {
-  name   = "${var.name}-ssh-ingress"
+  name   = "${var.name_prefix}-ssh-ingress"
   vpc_id = data.aws_vpc.default.id
 
   # SSH
@@ -69,7 +69,7 @@ resource "aws_security_group" "ssh_ingress" {
 }
 
 resource "aws_security_group" "allow_all_internal" {
-  name   = "${var.name}-allow-all-internal"
+  name   = "${var.name_prefix}-allow-all-internal"
   vpc_id = data.aws_vpc.default.id
 
   ingress {
@@ -88,7 +88,7 @@ resource "aws_security_group" "allow_all_internal" {
 }
 
 resource "aws_security_group" "clients_ingress" {
-  name   = "${var.name}-clients-ingress"
+  name   = "${var.name_prefix}-clients-ingress"
   vpc_id = data.aws_vpc.default.id
 
   ingress {
@@ -150,7 +150,7 @@ resource "aws_instance" "server" {
   # ConsulAutoJoin is necessary for nodes to automatically join the cluster
   tags = merge(
     {
-      "Name" = "${var.name}-server-${count.index}"
+      "Name" = "${var.name_prefix}-server-${count.index}"
     },
     {
       "ConsulAutoJoin" = "auto-join"
@@ -195,7 +195,7 @@ resource "aws_instance" "client" {
   # ConsulAutoJoin is necessary for nodes to automatically join the cluster
   tags = merge(
     {
-      "Name" = "${var.name}-client-${count.index}"
+      "Name" = "${var.name_prefix}-client-${count.index}"
     },
     {
       "ConsulAutoJoin" = "auto-join"
@@ -235,12 +235,12 @@ resource "aws_instance" "client" {
 }
 
 resource "aws_iam_instance_profile" "instance_profile" {
-  name_prefix = var.name
+  name_prefix = var.name_prefix
   role        = aws_iam_role.instance_role.name
 }
 
 resource "aws_iam_role" "instance_role" {
-  name_prefix        = var.name
+  name_prefix        = var.name_prefix
   assume_role_policy = data.aws_iam_policy_document.instance_role.json
 }
 
@@ -257,7 +257,7 @@ data "aws_iam_policy_document" "instance_role" {
 }
 
 resource "aws_iam_role_policy" "auto_discover_cluster" {
-  name   = "${var.name}-auto-discover-cluster"
+  name   = "${var.name_prefix}-auto-discover-cluster"
   role   = aws_iam_role.instance_role.id
   policy = data.aws_iam_policy_document.auto_discover_cluster.json
 }

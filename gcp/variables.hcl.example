@@ -1,19 +1,16 @@
-# Packer variables (all are required)
+# Packer variables
 project                   = "GCP_PROJECT_ID"
 region                    = "GCP_REGION"
 zone                      = "GCP_ZONE"
 
-# Terraform variables (all are required)
-retry_join                = "project_name=GCP_PROJECT_ID zone_pattern=GCP_ZONE provider=gce tag_value=auto-join"
+# Terraform variables
 machine_image             = "MACHINE_IMAGE_FROM_PACKER_BUILD"
-nomad_consul_token_id     = "123e4567-e89b-12d3-a456-426614174000"
-nomad_consul_token_secret = "123e4567-e89b-12d3-a456-426614174000"
 
 # These variables will default to the values shown
 # and do not need to be updated unless you want to
 # change them
 # allowlist_ip            = "0.0.0.0/0"
-# name                    = "nomad"
+# name_prefix             = "nomad"
 # server_instance_type    = "t2.micro"
 # server_count            = "3"
 # client_instance_type    = "t2.micro"

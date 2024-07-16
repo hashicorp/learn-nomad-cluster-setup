@@ -15,37 +15,15 @@ variable "location" {
   type = string
 }
 
-variable "client_id" {
-  type = string
-}
-
-variable "client_secret" {
-  type = string
-}
-
 variable "resource_group_name" {
   type = string
-}
-
-variable "storage_account" {
-  type = string
-}
-
-variable "subscription_id" {
-  type = string
-}
-
-variable "tenant_id" {
-  type = string
+  default = "hashistack"
 }
 
 source "azure-arm" "hashistack" {
-  client_id = var.client_id
-  client_secret = var.client_secret
+  use_azure_cli_auth = true
   managed_image_resource_group_name = var.resource_group_name
   managed_image_name = "hashistack.${local.timestamp}"
-  subscription_id = var.subscription_id
-  tenant_id = var.tenant_id
   os_type = "Linux"
   image_publisher = "Canonical"
   image_offer = "0001-com-ubuntu-server-jammy"
@@ -69,6 +47,11 @@ build {
   provisioner "file" {
     destination = "/ops"
     source      = "../shared"
+  }
+
+  provisioner "shell" {
+    # workaround to cloud-init deleting apt lists while apt-update runs from setup.sh
+    inline = ["cloud-init status --wait"]
   }
 
   provisioner "shell" {
