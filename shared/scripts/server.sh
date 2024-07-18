@@ -33,6 +33,10 @@ case $CLOUD in
     echo "CLOUD_ENV: azure"
     IP_ADDRESS=$(curl -s -H Metadata:true --noproxy "*" http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0?api-version=2021-12-13 | jq -r '.["privateIpAddress"]')
     ;;
+  scaleway)
+    echo "CLOUD_ENV: scaleway"
+    IP_ADDRESS=$(curl -s --local-port 1-1024 http://169.254.42.42/conf?format=json | jq '.private_ip' -r)
+    ;;
   *)
     echo "CLOUD_ENV: not set"
     ;;

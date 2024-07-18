@@ -28,6 +28,9 @@ case $CLOUD_ENV in
   azure)
     echo "CLOUD_ENV: azure"
     ;;
+  scaleway)
+    echo "CLOUD_ENV: scaleway"
+    ;;
   *)
     echo "CLOUD_ENV: not set"
     ;;
