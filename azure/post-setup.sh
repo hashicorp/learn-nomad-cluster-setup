@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 
 NOMAD_USER_TOKEN_FILENAME="nomad.token"
 LB_ADDRESS=$(terraform output -raw lb_address_consul_nomad)
