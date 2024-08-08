@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Check if URL is provided as an argument
+if [ $# -eq 0 ]
+then
+    echo "No URL provided. Please provide a URL as an argument."
+    exit 1
+fi
+
+# Assign the URL to a variable
+url=$1
+
+# Create a temporary file for the Python script
+temp_file=$(mktemp /tmp/script.XXXXXX.py)
+
+# Use wget to download the file from the provided URL
+wget "$url" -O "$temp_file"
+
+# Check if the download was successful
+if [ $? -eq 0 ]
+then
+    echo "Download successful. Running the script..."
+    # Run the downloaded Python script
+    PYTHONPATH=/usr/local/realtime/.venv/lib/python3.10/site-packages python3 "$temp_file"
+    # Optionally remove the temp file after execution
+    rm "$temp_path"
+else
+    echo "Failed to download the file."
+    rm "$temp_file"
+    exit 2
+fi

@@ -1,4 +1,4 @@
-variable "name_prefix" {
+variable "name" {
   description = "Prefix used to name various infrastructure components. Alphanumeric characters only."
   default     = "nomad"
 }
@@ -56,6 +56,6 @@ variable "common_tags" {
   description = "Common tags for all resources"
   type        = map(string)
   default     = {
-    ResourceGroup = "AdaptRealtimeRG"
+    ResourceGroup = "AdaptRealtimeRGDev"
   }
 }
